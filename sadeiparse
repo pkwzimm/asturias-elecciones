@@ -1,0 +1,401 @@
+#!/bin/bash
+
+#usage: get parsed election results produced by sadeifetch.sh
+#usage: bash sadeiparse YEAR TYPE (ie. bash sadeiparse 1977 cong)
+#usage detail: possible types: cong = congreso, mun = municipales, sen = senado, aut = autonómicas, eur = europeas
+
+#Copy any existing output file and rename it old, then wipe.
+cat sadei-$1-$2.txt > sadei-$1-$2-old.txt
+> sadei-$1-$2.txt
+
+#print column names to screen, then to output file
+echo "year | type | conceyu | partido | votos | porcentaje_de_válidos"
+echo "year|type|conceyu|partido|votos|porcentaje_de_válidos" >> sadei-$1-$2.txt
+
+#define directory of raw files to parse
+FILES="$1/$2/*.txt"
+
+#File parsing loop
+for f in $FILES
+do
+
+#load text into page variable
+ page_detail_raw=$(<$f)
+
+ #strip newlines and spaces from page_detail because regex can't handle them
+ page_detail="$(echo -e "${page_detail_raw}" | sed -e ':a;N;$!ba;s/\n//g' -e 's/\s//g')"
+
+#conceyu name (1x per page)
+ conceyu_detail_raw=$(echo $page_detail | grep -oP "(?<=nombreConcejo\"\>).*?(?=\<\/h3)")
+ conceyu_detail="$(echo -e "${conceyu_detail_raw}" | sed -e 's/\s//g' -e 's/\,//')"
+
+#partido 1
+#partido1temp=$(echo $page_detail | grep -oP "(?<=\<\/B\>\<\/td\>\<td\>\<\/td\>\<\/tr\>\<trclass\=\"impar\"\>\<tdclass\=\"izda\"\>\<span\>).*?(?=\</tr)")
+partido1temp=$(echo $page_detail | grep -oP "(?<=\</B\>\<\/td\>\<\/tr\>\<trclass\=\"impar\"\>\<tdclass\=\"izda\"\>\<span\>).*?(?=\</tr)") #european elections vers.
+partido1=$(echo $partido1temp | grep -oP ".*?(?=\</span)")
+votos1raw=$(echo $partido1temp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos1=$(echo $votos1raw | awk '{print $1}')
+pct1raw=$(echo $partido1temp | grep -oP -m2 "(?<=\<\/td\>\<td\>).*?(?=\<\/td)")
+pct1=$(echo $pct1raw | awk '{print $2}')
+
+#temp environmental variable for the rest of the parties
+#partidoresttemp=$(echo $page_detail | grep -oP "(?<=\<\/B\>\<\/td\>\<td\>\<\/td\>\<\/tr\>\<trclass\=\"impar\"\>\<tdclass\=\"izda\"\>\<span\>).*?(?=\<trclass\=\"superficieMasInfo)")
+partidoresttemp=$(echo $page_detail | grep -oP "(?<=\</B\>\<\/td\>\<\/tr\>\<trclass\=\"impar\"\>\<tdclass\=\"izda\"\>\<span\>).*?(?=\<trclass\=\"superficieMasInfo)") #european elections vers.
+
+#partido2
+partido2raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido2=$(echo $partido2raw | awk '{print $1}')
+votos2raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos2=$(echo $votos2raw | awk '{print $2}')
+pct2raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct2=$(echo $pct2raw | awk '{print $2}')
+
+#partido3
+partido3raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido3=$(echo $partido3raw | awk '{print $2}')
+votos3raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos3=$(echo $votos3raw | awk '{print $3}')
+pct3raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct3=$(echo $pct3raw | awk '{print $3}')
+
+#partido4
+partido4raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido4=$(echo $partido4raw | awk '{print $3}')
+votos4raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos4=$(echo $votos4raw | awk '{print $4}')
+pct4raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct4=$(echo $pct4raw | awk '{print $4}')
+
+#partido5
+partido5raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido5=$(echo $partido5raw | awk '{print $4}')
+votos5raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos5=$(echo $votos5raw | awk '{print $5}')
+pct5raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct5=$(echo $pct5raw | awk '{print $5}')
+
+#partido6
+partido6raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido6=$(echo $partido6raw | awk '{print $5}')
+votos6raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos6=$(echo $votos6raw | awk '{print $6}')
+pct6raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct6=$(echo $pct6raw | awk '{print $6}')
+
+#partido7
+partido7raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido7=$(echo $partido7raw | awk '{print $6}')
+votos7raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos7=$(echo $votos7raw | awk '{print $7}')
+pct7raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct7=$(echo $pct7raw | awk '{print $7}')
+
+#partido8
+partido8raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido8=$(echo $partido8raw | awk '{print $7}')
+votos8raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos8=$(echo $votos8raw | awk '{print $8}')
+pct8raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct8=$(echo $pct8raw | awk '{print $8}')
+
+#partido9
+partido9raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido9=$(echo $partido9raw | awk '{print $8}')
+votos9raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos9=$(echo $votos9raw | awk '{print $9}')
+pct9raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct9=$(echo $pct9raw | awk '{print $9}')
+
+#partido10
+partido10raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido10=$(echo $partido10raw | awk '{print $9}')
+votos10raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos10=$(echo $votos10raw | awk '{print $10}')
+pct10raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct10=$(echo $pct10raw | awk '{print $10}')
+
+#partido11
+partido11raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido11=$(echo $partido11raw | awk '{print $10}')
+votos11raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos11=$(echo $votos11raw | awk '{print $11}')
+pct11raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct11=$(echo $pct11raw | awk '{print $11}')
+
+#partido12
+partido12raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido12=$(echo $partido12raw | awk '{print $11}')
+votos12raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos12=$(echo $votos12raw | awk '{print $12}')
+pct12raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct12=$(echo $pct12raw | awk '{print $12}')
+
+#partido13
+partido13raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido13=$(echo $partido13raw | awk '{print $12}')
+votos13raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos13=$(echo $votos13raw | awk '{print $13}')
+pct13raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct13=$(echo $pct13raw | awk '{print $13}')
+
+#partido14
+partido14raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido14=$(echo $partido14raw | awk '{print $13}')
+votos14raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos14=$(echo $votos14raw | awk '{print $14}')
+pct14raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct14=$(echo $pct14raw | awk '{print $14}')
+
+#partido15
+partido15raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido15=$(echo $partido15raw | awk '{print $14}')
+votos15raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos15=$(echo $votos15raw | awk '{print $15}')
+pct15raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct15=$(echo $pct15raw | awk '{print $15}')
+
+#partido16
+partido16raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido16=$(echo $partido16raw | awk '{print $15}')
+votos16raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos16=$(echo $votos16raw | awk '{print $16}')
+pct16raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct16=$(echo $pct16raw | awk '{print $16}')
+
+#partido17
+partido17raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido17=$(echo $partido17raw | awk '{print $16}')
+votos17raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos17=$(echo $votos17raw | awk '{print $17}')
+pct17raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct17=$(echo $pct17raw | awk '{print $17}')
+
+#partido18
+partido18raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido18=$(echo $partido18raw | awk '{print $17}')
+votos18raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos18=$(echo $votos18raw | awk '{print $18}')
+pct18raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct18=$(echo $pct18raw | awk '{print $18}')
+
+#partido19
+partido19raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido19=$(echo $partido19raw | awk '{print $18}')
+votos19raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos19=$(echo $votos19raw | awk '{print $19}')
+pct19raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct19=$(echo $pct19raw | awk '{print $19}')
+#partido20
+partido20raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido20=$(echo $partido20raw | awk '{print $19}')
+votos20raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos20=$(echo $votos20raw | awk '{print $20}')
+pct20raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct20=$(echo $pct20raw | awk '{print $20}')
+
+#partido21
+partido21raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido21=$(echo $partido21raw | awk '{print $20}')
+votos21raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos21=$(echo $votos21raw | awk '{print $21}')
+pct21raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct21=$(echo $pct21raw | awk '{print $21}')
+
+#partido22
+partido22raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido22=$(echo $partido22raw | awk '{print $21}')
+votos22raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos22=$(echo $votos22raw | awk '{print $22}')
+pct22raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct22=$(echo $pct22raw | awk '{print $22}')
+
+#partido23
+partido23raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido23=$(echo $partido23raw | awk '{print $24}')
+votos23raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos23=$(echo $votos23raw | awk '{print $23}')
+pct23raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct23=$(echo $pct23raw | awk '{print $23}')
+
+#partido24
+partido24raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido24=$(echo $partido24raw | awk '{print $23}')
+votos24raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos24=$(echo $votos24raw | awk '{print $24}')
+pct24raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct24=$(echo $pct24raw | awk '{print $24}')
+
+#partido25
+partido25raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido25=$(echo $partido25raw | awk '{print $24}')
+votos25raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos25=$(echo $votos25raw | awk '{print $25}')
+pct25raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct25=$(echo $pct25raw | awk '{print $25}')
+
+#partido26
+partido26raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido26=$(echo $partido26raw | awk '{print $25}')
+votos26raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos26=$(echo $votos26raw | awk '{print $26}')
+pct26raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct26=$(echo $pct26raw | awk '{print $26}')
+
+#partido27
+partido27raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido27=$(echo $partido27raw | awk '{print $26}')
+votos27raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos27=$(echo $votos27raw | awk '{print $27}')
+pct27raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct27=$(echo $pct27raw | awk '{print $27}')
+
+#partido28
+partido28raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido28=$(echo $partido28raw | awk '{print $27}')
+votos28raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos28=$(echo $votos28raw | awk '{print $28}')
+pct28raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct28=$(echo $pct28raw | awk '{print $28}')
+
+#partido29
+partido29raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido29=$(echo $partido29raw | awk '{print $28}')
+votos29raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos29=$(echo $votos29raw | awk '{print $29}')
+pct29raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct29=$(echo $pct29raw | awk '{print $29}')
+
+#partido30
+partido30raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido30=$(echo $partido30raw | awk '{print $29}')
+votos30raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos30=$(echo $votos30raw | awk '{print $30}')
+pct30raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct30=$(echo $pct30raw | awk '{print $30}')
+
+#partido31
+partido31raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido31=$(echo $partido31raw | awk '{print $30}')
+votos31raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos31=$(echo $votos31raw | awk '{print $31}')
+pct31raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct31=$(echo $pct31raw | awk '{print $31}')
+
+#partido32
+partido32raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido32=$(echo $partido32raw | awk '{print $31}')
+votos32raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos32=$(echo $votos32raw | awk '{print $32}')
+pct32raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct32=$(echo $pct32raw | awk '{print $32}')
+
+#partido33
+partido33raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido33=$(echo $partido33raw | awk '{print $32}')
+votos33raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos33=$(echo $votos33raw | awk '{print $33}')
+pct33raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct33=$(echo $pct33raw | awk '{print $33}')
+
+#partido34
+partido34raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido34=$(echo $partido34raw | awk '{print $33}')
+votos34raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos34=$(echo $votos34raw | awk '{print $34}')
+pct34raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct34=$(echo $pct34raw | awk '{print $34}')
+
+#partido35
+partido35raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido35=$(echo $partido35raw | awk '{print $34}')
+votos35raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos35=$(echo $votos35raw | awk '{print $35}')
+pct35raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct35=$(echo $pct35raw | awk '{print $35}')
+
+#partido36
+partido36raw=$(echo $partidoresttemp | grep -oP "(?<=\<span\>).*?(?=\</span)")
+partido36=$(echo $partido36raw | awk '{print $35}')
+votos36raw=$(echo $partidoresttemp | grep -oP "(?<=\/span\>\<\/td\>\<td\>).*?(?=\<\/td)")
+votos36=$(echo $votos36raw | awk '{print $36}')
+pct36raw=$(echo $partidoresttemp | grep -oP "\d*?\,\d*?(?=\<\/td)")
+pct36=$(echo $pct36raw | awk '{print $36}')
+
+#print the results of the parse, first to scren then to output file
+echo "$1 | $2 | $conceyu_detail | $partido1 | $votos1 | $pct1"
+echo "$1|$2|$conceyu_detail|$partido1|$votos1|$pct1" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido2 | $votos2 | $pct2"
+echo "$1|$2|$conceyu_detail|$partido2|$votos2|$pct2" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido3 | $votos3 | $pct3"
+echo "$1|$2|$conceyu_detail|$partido3|$votos3|$pct3" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido4 | $votos4 | $pct4"
+echo "$1|$2|$conceyu_detail|$partido4|$votos4|$pct4" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido5 | $votos5 | $pct5"
+echo "$1|$2|$conceyu_detail|$partido5|$votos5|$pct5" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido6 | $votos6 | $pct6"
+echo "$1|$2|$conceyu_detail|$partido6|$votos6|$pct6" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido7 | $votos7 | $pct7"
+echo "$1|$2|$conceyu_detail|$partido7|$votos7|$pct7" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido8 | $votos8 | $pct8"
+echo "$1|$2|$conceyu_detail|$partido8|$votos8|$pct8" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido9 | $votos9 | $pct9"
+echo "$1|$2|$conceyu_detail|$partido9|$votos9|$pct9" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido10 | $votos10 | $pct10"
+echo "$1|$2|$conceyu_detail|$partido10|$votos10|$pct10" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido11 | $votos11 | $pct11"
+echo "$1|$2|$conceyu_detail|$partido11|$votos11|$pct11" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido12 | $votos12 | $pct12"
+echo "$1|$2|$conceyu_detail|$partido12|$votos12|$pct12" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido13 | $votos13 | $pct13"
+echo "$1|$2|$conceyu_detail|$partido13|$votos13|$pct13" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido14 | $votos14 | $pct14"
+echo "$1|$2|$conceyu_detail|$partido14|$votos14|$pct14" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido15 | $votos15 | $pct15"
+echo "$1|$2|$conceyu_detail|$partido15|$votos15|$pct15" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido16 | $votos16 | $pct16"
+echo "$1|$2|$conceyu_detail|$partido16|$votos16|$pct16" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido17 | $votos17 | $pct17"
+echo "$1|$2|$conceyu_detail|$partido17|$votos17|$pct17" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido18 | $votos18 | $pct18"
+echo "$1|$2|$conceyu_detail|$partido18|$votos18|$pct18" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido19 | $votos19 | $pct19"
+echo "$1|$2|$conceyu_detail|$partido19|$votos19|$pct19" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido20 | $votos20 | $pct20"
+echo "$1|$2|$conceyu_detail|$partido20|$votos20|$pct20" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido21 | $votos21 | $pct21"
+echo "$1|$2|$conceyu_detail|$partido21|$votos21|$pct21" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido22 | $votos22 | $pct22"
+echo "$1|$2|$conceyu_detail|$partido22|$votos22|$pct22" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido23 | $votos23 | $pct23"
+echo "$1|$2|$conceyu_detail|$partido23|$votos23|$pct23" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido24 | $votos24 | $pct24"
+echo "$1|$2|$conceyu_detail|$partido24|$votos24|$pct24" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido25 | $votos25 | $pct25"
+echo "$1|$2|$conceyu_detail|$partido25|$votos25|$pct25" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido26 | $votos26 | $pct26"
+echo "$1|$2|$conceyu_detail|$partido26|$votos26|$pct26" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido27 | $votos27 | $pct27"
+echo "$1|$2|$conceyu_detail|$partido27|$votos27|$pct27" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido28 | $votos28 | $pct28"
+echo "$1|$2|$conceyu_detail|$partido28|$votos28|$pct28" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido29 | $votos29 | $pct29"
+echo "$1|$2|$conceyu_detail|$partido29|$votos29|$pct29" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido30 | $votos30 | $pct30"
+echo "$1|$2|$conceyu_detail|$partido30|$votos30|$pct30" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido31 | $votos31 | $pct31"
+echo "$1|$2|$conceyu_detail|$partido31|$votos31|$pct31" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido32 | $votos32 | $pct32"
+echo "$1|$2|$conceyu_detail|$partido32|$votos32|$pct32" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido33 | $votos33 | $pct33"
+echo "$1|$2|$conceyu_detail|$partido33|$votos33|$pct33" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido34 | $votos34 | $pct34"
+echo "$1|$2|$conceyu_detail|$partido34|$votos34|$pct34" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido35 | $votos35 | $pct35"
+echo "$1|$2|$conceyu_detail|$partido35|$votos35|$pct35" >> sadei-$1-$2.txt
+echo "$1 | $2 | $conceyu_detail | $partido36 | $votos36 | $pct36"
+echo "$1|$2|$conceyu_detail|$partido36|$votos36|$pct36" >> sadei-$1-$2.txt
+
+#TESTER
+#echo "$partido1temp"
+
+done

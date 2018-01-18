@@ -1,0 +1,9 @@
+Two shell script files to pull electoral results and spit out pipe-separated text files for use in excel or whatever database you want.
+
+sadeifetch.sh pulls html pages to your local machine as new txt files and then calls sadeiparse, the text parser, to act on those files.
+
+sadeiparse can also be run as a standalone if you already have the proper txt files.
+
+command-line instructions are in comments at the top of both files.
+
+Currently set for european elections.  Uncomment the non-european election version of temp files to scrape autonomic, congressional, and municipal elections.
